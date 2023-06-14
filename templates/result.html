@@ -1,0 +1,25 @@
+<h2>Market Basket Analysis Results Page</h2>
+<h3>{{text}}</h3>
+<ul>
+    {% for itemset in result %}
+   
+        <li> <h4>{{ itemset }} </h4></li>
+    {% endfor %}
+</ul>
+
+<table border="1">
+    
+    {% for itemset in result %}
+    <tr>
+        <td>{{ itemset }}</td>
+        
+    </tr>
+    {% endfor %}
+</table> 
+
+<h2>Selected Columns:</h2>
+<ul>
+  {% for column in selected_columns %}
+    <li>{{ column }}</li>
+  {% endfor %}
+</ul>

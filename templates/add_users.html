@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Add Users{% endblock %}
+{% block content %}
+<div>
+  <h2>
+    Add Users Page
+  </h2>
+
+  <form action="{{ url_for('add_users') }}" method="post" class="needs-validation" novalidate>
+				<div  class="h3 col text-danger text-wrap mw-50">{{ message }}</div>
+				<div class="col mb-3">
+					<input id="username" name="username" type="text" placeholder="Enter Your Username" class="form-control" required/>
+					<div class="valid-feedback">Looks good!</div>
+                <div class="invalid-feedback">Please enter your username.</div>
+				</div>		
+				<div class="col mb-3">
+					<input id="password" name="password" type="password" placeholder="Enter Your Password" class="form-control" required/>
+					<div class="valid-feedback">Looks good!</div>
+                <div class="invalid-feedback">Please enter your password.</div>
+				</div>			
+				<div class="col mb-3">
+					<input id="email" name="email" type="text" placeholder="Enter Your Email ID" class="form-control" required/>
+					<div class="valid-feedback">Looks good!</div>
+                <div class="invalid-feedback">Please enter your email.</div>
+				</div>
+      <div class="col mb-3">
+					 <label for="role">Choose a role:</label>
+        <select id="role" name="role">
+            <option value="User" selected>User</option>
+            <option value="Poweruser">Poweruser</option>
+        </select>
+        <br><br>
+					<div class="valid-feedback">Looks good!</div>
+                <div class="invalid-feedback">Please enter role.</div>
+				</div>
+          <!-- <div class="col mb-3">
+					<input id="org_id" name="org_id" type="text" placeholder="Enter Your role" class="form-control" required/>
+					<div class="valid-feedback">Looks good!</div>
+                <div class="invalid-feedback">Please enter role.</div>
+				</div> -->
+				<div class="col d-flex flex-column align-items-center mb-5">
+					<input type="submit" class="btn btn-dark col-6" value="Add User">
+				</div>
+			<!-- <p class="h5 pb-5 mb-5">Already have an account? <a style="color:#006B70" href="{{url_for('login')}}"> Sign In here</a></p> -->
+		</div>
+		</div>
+		<script>
+			// JavaScript for disabling form submissions if there are invalid fields
+			(function () {
+			  "use strict";
+	  
+			  // Fetch all the forms we want to apply custom Bootstrap validation styles to
+			  var forms = document.querySelectorAll(".needs-validation");
+	  
+			  // Loop over them and prevent submission
+			  Array.prototype.slice.call(forms).forEach(function (form) {
+				form.addEventListener(
+				  "submit",
+				  function (event) {
+					if (!form.checkValidity()) {
+					  event.preventDefault();
+					  event.stopPropagation();
+					}
+	  
+					form.classList.add("was-validated");
+				  },
+				  false
+				);
+			  });
+			})();
+		  </script>
+</div>
+{% endblock %}

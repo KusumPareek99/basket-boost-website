@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h1>
+        <p class="text-center">Get Started Page</p>
+    </h1>
+    <h2>Upload CSV File</h2>
+  <form id="upload-form" action="/clean" method="POST" enctype="multipart/form-data">
+    <input  id="file-input" type="file" name="file" accept=".csv" required><br><br>
+    <div id="column-checkboxes">
+        <h3>Select Columns for Data Cleaning:</h3>
+      </div>
+      <br>
+      <input type="submit" value="Clean Data" disabled>
+    
+    
+  </form>
+    <!-- templates/upload.html -->
+    <!-- <form method="POST" enctype="multipart/form-data" action="/process">
+        <input class="form-control mb-4" type="file" name="file" required><a class="btn btn-dark col-2" href="{{url_for('getStarted')}}">Upload</a> -->
+        <!-- to do : a drop down with multiple selections to choose the column names of the data set from the file uploaded for data cleaning
+        {% for column in columns %}
+          <input type="checkbox" name="columns" value="{{ column }}"> {{ column }}<br>
+        {% endfor %}
+        <br>
+       
+        <input class="btn btn-dark col-2" type="submit" value="Submit" >
+    </form> -->
+<!-- <div>
+   templates/result.html 
+<h2>Market Basket Analysis Results</h2>
+<ul>
+    {% for itemset in result %}
+        <li>{{ itemset }}</li>
+    {% endfor %}
+</ul>
+
+</div> -->
+</div>
+<script>
+    const fileInput = document.getElementById('file-input');
+    const uploadForm = document.getElementById('upload-form');
+    const columnCheckboxes = document.getElementById('column-checkboxes');
+
+    fileInput.addEventListener('change', function() {
+      const file = fileInput.files[0];
+      const fileReader = new FileReader();
+
+      fileReader.onload = function(e) {
+        const contents = e.target.result;
+        const columns = getCSVColumns(contents);
+        renderColumnCheckboxes(columns);
+      };
+
+      fileReader.readAsText(file);
+    });
+
+    function getCSVColumns(csvContents) {
+      const lines = csvContents.split('\n');
+      const headerLine = lines[0];
+      return headerLine.split(',');
+    }
+
+    function renderColumnCheckboxes(columns) {
+      columnCheckboxes.innerHTML = '';
+      for (let column of columns) {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'selected_columns';
+        checkbox.value = column;
+
+        const label = document.createElement('label');
+        label.textContent = column;
+
+        columnCheckboxes.appendChild(checkbox);
+        columnCheckboxes.appendChild(label);
+        columnCheckboxes.appendChild(document.createElement('br'));
+      }
+
+      const submitButton = document.createElement('input');
+      submitButton.type = 'submit';
+      submitButton.value = 'Clean Data';
+
+      uploadForm.appendChild(submitButton);
+      submitButton.disabled = false;
+    }
+  </script>
+{% endblock %}

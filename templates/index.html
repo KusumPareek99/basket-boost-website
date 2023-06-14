@@ -1,0 +1,25 @@
+<!-- Store this code in 'index.html' file inside the 'templates' folder-->
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+<!-- <html>
+	<head>
+		<meta charset="UTF-8">
+		<title> Index </title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">					
+	</head>
+	<body><br/><br/><br/><br/><br/> -->
+        {% block content %}
+		<div class="container">
+		<div  class="col d-flex flex-column align-items-center border border-4">
+			<div class="header">
+				<h1>Index Page</h1>
+			</div>
+				<h1>
+					Hi {{session.username}}!! Your role is {{session.role}}<br/><br/> Welcome to the index page...				
+				</h1>
+			 <p>Details were {{ message }}</p>
+		</div>
+		</div>
+        {% endblock %}
+	<!-- </body>
+</html> -->
