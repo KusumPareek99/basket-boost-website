@@ -17,35 +17,33 @@
     </div>
     <div class="col-8">
        <h2 class='pt-4 mt-4'>
-   All Users 
+   My Datasets
   </h2>
        {% include 'loader.html' %}
 <div class="table-responsive">
   <table class='table'>
    <thead>
             <tr>
-                <th>User ID</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th colspan='2'>Action</th>
+                <th>S.No.</th>
+                <th>File Name</th>
+               
+                <th colspan='3'>Action</th>
                 
             </tr>
         </thead>
         <tbody>
-            {% for user in users %}
+            {% for file in datasets %}
              
           
             <tr>
                 <td>{{ loop.index }}</td>
-                <td>{{ user['username'] }}</td>
-                <td>{{ user['password'] }}</td>
-                <td>{{ user['email'] }}</td>
-                <td>{{ user['role'] }}</td>
+                <td>{{ file['file_name'] }}</td>
+             
+               
                 <td>
-                  <a class='btn btn-success' href="{{ url_for('edit_user', user_id=user['user_id']) }}">Edit</a>
-                  <a class='btn btn-danger' href="{{ url_for('delete_user', user_id=user['user_id']) }}">Delete</a>
+                  <a class='btn btn-success' href="#">View</a>
+                  <a class='btn btn-warning' href="{{ url_for('preprocess', file_id=file['file_id']) }}">Pre-Process</a>
+                  <a class='btn btn-danger' href="#">Delete</a>
                 </td>
                
             </tr>

@@ -2,13 +2,22 @@ from flask import Flask, render_template, session, request, redirect, url_for
 from database import engine
 from sqlalchemy import text
 import re
-from database import load_user_details, authenticate_user, load_user_byname_byemail, load_all_users_byorg, load_user, delete_user_byid, edit_user_byid
+import os
+from database import load_user_details, authenticate_user, load_user_byname_byemail, load_all_users_byorg, load_user, delete_user_byid, edit_user_byid, upload_dbfile,show_userdb, load_file
+import pandas as pd
+from mlxtend.preprocessing import TransactionEncoder
+from mlxtend.frequent_patterns import apriori, association_rules
+from matplotlib import pyplot as plt
 #from flask_fontawesome import FontAwesome
 
 app = Flask(__name__)
 #fa = FontAwesome(app)
 
 app.secret_key = "your secret key"
+
+# Set the temporary upload folder
+UPLOAD_FOLDER = 'static/mydb'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 @app.route('/')
@@ -99,7 +108,7 @@ def all_users():
   org_id = session['org_id']
   users = load_all_users_byorg(org_id)
   print(users)
-  return render_template('view_all_users.html', users=users, i=0)
+  return render_template('view_all_users.html', users=users)
 
 
 # @app.route("/allusers/<id>")
@@ -119,7 +128,7 @@ def delete_user(user_id):
 @app.route('/edit/<int:user_id>')
 def edit_user(user_id):
   user = load_user(user_id)
-  print("USER ------- ", user)
+  print("USER ------- ", user )
   # Redirect to the edit user page for the given user_id
   return render_template('edit_user.html', user=user)
 
@@ -146,7 +155,172 @@ def update_user(user_id):
     return redirect(url_for('index', message=update_details))
   org_id = session['org_id']
   users = load_all_users_byorg(org_id)
-  return render_template('view_all_users.html', user=users, i=0)
+  return render_template('view_all_users.html', user=users)
+
+# Handle the file upload request
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    # Check if a file was uploaded
+    if 'file' not in request.files:
+        return render_template('get_started.html', error='No file selected.')
+
+    file = request.files['file']
+
+    # Check if the file is empty
+    if file.filename == '':
+        return render_template('get_started.html', error='No file selected.')
+
+    # Save the uploaded file to a temporary location
+    filename = file.filename
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(file_path)
+    user_id = session['user_id']
+
+    # Save the file to the MySQL database
+    try:
+        
+        # Read the file content
+        with open(file_path, 'r') as f:
+            file_content = f.read()
+
+        # Insert the file content into the database table
+        message = upload_dbfile(filename,file_content, user_id)
+
+        return render_template('get_started.html', message = message)
+
+    except Exception as error:
+        return render_template('get_started.html', error='Failed to upload file. Error: {}'.format(error))
+
+    finally:
+        # Remove the temporary file
+        os.remove(file_path)
+
+@app.route('/alldatasets',methods=['GET', 'POST'])
+def alldatasets():
+  user_id = session['user_id']
+  datasets = show_userdb(user_id)
+  return render_template('all_datasets.html', datasets = datasets)
+
+@app.route('/preprocess/<int:file_id>', methods=['GET','POST'])
+def preprocess(file_id):
+  file = load_file(file_id)
+  # print('file: ', file['file_name'] )
+   # Get the file content from the database
+  file_content = file['file_data']
+  # Create a temporary file path to save the content
+  temp_file_path = f"static/mydb/{file['file_name']}"
+  with open(temp_file_path, 'wb') as temp_file:
+      temp_file.write(file_content)
+  # Read the temporary file into a DataFrame
+  df = pd.read_csv(temp_file_path)  # todo: Adjust this line if using Excel file
+  # Perform data cleaning
+  # Remove duplicates
+  df.drop_duplicates(inplace=True)
+
+  # Handle missing values
+  df.fillna('NA', inplace=True)
+
+  # Change column data types to string
+  df = df.astype(str)
+
+  columns = getColumns(df)
+
+  for column in columns:
+    if pd.api.types.is_datetime64_any_dtype(df[column]):
+      print(f"The column '{column}' is of date type.converting to a format...")
+      df[column] = pd.to_datetime(df['date_column'], format='%Y-%m-%d').dt.strftime('%Y-%m-%d')
+
+    else:
+      print(f"The column '{column_name}' is not of date type.")
+
+
+  return render_template('preprocess_data.html', file=file)
+
+# function to get the column names of uploaded csv file
+def getColumns(df):
+    columns = df.columns.tolist()
+    return columns
+    
+# function to remove spaces in the specified column of the dataframe
+def removeSpaces(df, column):
+    df[column] = df[column].str.strip()
+    return df
+
+# function to remove duplicates in the specified column of the dataframe    
+def removeDuplicates(df, column):
+    df[column] = df[column].drop_duplicates()
+    return df
+
+# function to remove null values in the specified column of the dataframe
+def removeNull(df, column):
+    df[column] = df[column].dropna()
+    return df
+
+# function to remove special characters in the specified column of the dataframe
+def removeSpecialCharacters(df, column):
+    df[column] = df[column].str.replace('[^\w\s]','')
+    return df
+# function to convert the specified column to string type
+def convertToString(df, column):
+    df[column] = df[column].astype(str)
+    return df
+
+# function to perform data cleaning
+def dataCleaning(df,column):
+    df = convertToString(df, column)
+    df = removeSpaces(df, column)
+    # df = removeDuplicates(df, column)
+    # df = removeNull(df, column)
+    # df = removeSpecialCharacters(df, column)
+    return df
+
+# function to perform one hot encoding
+def oneHotEncoding(df):
+    te = TransactionEncoder()
+    te_ary = te.fit(df).transform(df)
+    df = pd.DataFrame(te_ary, columns=te.columns_)
+    return df
+
+# function to perform apriori algorithm
+def aprioriAlgorithm(df):
+    frequent_itemsets = apriori(df, min_support=0.01, use_colnames=True)
+    return frequent_itemsets
+
+# function to perform association rules
+def associationRules(frequent_itemsets):
+    rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1)
+    return rules
+
+# function to perform data analysis
+def dataAnalysis(df):
+    #df = dataCleaning(df) ---- do data cleaning separately
+    df = oneHotEncoding(df)
+    frequent_itemsets = aprioriAlgorithm(df)
+    rules = associationRules(frequent_itemsets)
+    return rules
+
+# function to display the results
+def displayResults(rules):
+    rules = rules.sort_values(['confidence', 'lift'], ascending =[False, False])
+    print(rules.head(10))
+    return rules.head(10)
+
+# function to perform data visualization
+def dataVisualization(rules):
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111)
+    scatter = ax.scatter(rules['support'], rules['confidence'], c=rules['lift'], cmap='gray')
+    plt.colorbar(scatter)
+    plt.xlabel('support')
+    plt.ylabel('confidence')
+    plt.show()
+    
+# function to perform data analysis and visualization
+def dataAnalysisAndVisualization(df):
+    rules = dataAnalysis(df)
+    displayResults(rules)
+    dataVisualization(rules)
+
 
 
 @app.route("/logout")

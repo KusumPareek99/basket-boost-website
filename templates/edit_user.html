@@ -2,13 +2,16 @@
 <html>
 <head>
     <title>Edit User</title>
+  <link rel="icon" type="image/x-icon" href="https://basket-boost-website.kusumpareek.repl.co/static/9.png">
     <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-  <h2>Edit User {{user_id}}</h2>
-    <div class="container">
-        <h1>Edit User</h1>
+  {% include 'navbar.html' %}
+
+   {% include 'loader.html' %}
+    <div class="container pt-4 mt-4">
+        <h1>You are editing user "{{ user['username'] }}" </h1>
         <form action="{{ url_for('update_user', user_id=user['user_id']) }}" method="POST">
             <div class="form-group">
                 <label for="username">Username:</label>

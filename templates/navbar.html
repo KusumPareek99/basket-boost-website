@@ -1,0 +1,15 @@
+ <header>
+        <nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary bg-light shadow-lg d-flex justify-content-between" data-bs-theme="light">
+         
+            
+            <a class="navbar-brand ps-3" href="{{url_for('index')}}">
+              <img src="https://basket-boost-website.kusumpareek.repl.co/static/9.png" alt="Logo" width="40" height="40" class="d-inline-block align-center m-0">
+            <span class="align-middle h3" style="color: #FB8240">Basket Boost</span> 
+            </a>
+            <form class="d-flex" role="search">
+              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-dark" type="submit">Search</button>
+            </form>
+            <a href="{{ url_for('logout') }}" class="btn btn-dark text-end me-3">Logout</a>
+        </nav>
+      </header>

@@ -108,6 +108,52 @@ def edit_user_byid(user_id,username,password,email,role):
     else :
       return None 
 
+
+def upload_dbfile(filename, filedata,userid):
+  with engine.connect() as conn:
+    query = text(
+          "INSERT INTO db_files(file_name, file_data,user_id) VALUES (:filename, :filedata, :userid)"
+        )
+    result = conn.execute(
+          query, {
+            'filename': filename,
+            'filedata': filedata,
+            'userid': userid,
+          })
+    if result:
+      print("FILE UPLOADED!!")
+      return "Your file is saved!"
+    else:
+      return "Could not save the file. Try Again."
+
+def show_userdb(user_id):
+    with engine.connect() as conn:
+      query = text(
+        "SELECT file_id,file_name FROM db_files WHERE user_id = :user_id"
+      )
+      result = conn.execute(query, {'user_id': user_id})
+    
+      result_all = result.all()
+
+      files = []
+      for row in result_all:
+        files.append(row._asdict())
+
+      print("File Names : ", files)
+    return files
+  
+def load_file(file_id):
+  with engine.connect() as conn:
+    query = text("SELECT file_name,file_data FROM db_files WHERE file_id = :file_id LIMIT 1")
+    result = conn.execute(query, {'file_id': file_id})
+    rows = result.all()
+    if result is None:
+      return 'No such file'
+    row = rows[0]
+    # print(row._asdict())
+    return row._asdict()
+
+    
 # print(edit_user_byid('2','paku','123456','paku@gmail.com','P')) 
 # with engine.connect() as conn:
 

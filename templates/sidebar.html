@@ -1,0 +1,40 @@
+  <style>
+      /* Custom styles for the fixed sidebar */
+      .sidebar {
+        height: 100vh;
+        width: 250px;
+        position: fixed;
+        top: 10%;
+        left: 0;
+        z-index: 1;
+        background-color: #f8f9fa;
+        padding: 20px;
+      }
+  
+      
+    </style>
+<div class="sidebar">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('index')}}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('getStarted')}}">Get Started</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('alldatasets')}}">My Datasets</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('index')}}">My Reports</a>
+          </li>
+          {% if session.role == 'P'  %}
+            <li class="nav-item">
+            <a class="nav-link" href="{{url_for('add_users')}}">Add Users</a>
+          </li>
+           <li class="nav-item">
+            <a class="nav-link" href="{{url_for('all_users')}}">View All Users</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    

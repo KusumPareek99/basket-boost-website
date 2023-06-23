@@ -9,6 +9,9 @@ python = "^3.10"
 Flask = "^2.3.2"
 Flask-FontAwesome = "^0.1.5"
 SQLAlchemy = "^2.0.15"
+matplotlib = "^3.7.1"
+mlxtend = "^0.22.0"
+pandas = "^2.0.2"
 
 [tool.poetry.dev-dependencies]
 
