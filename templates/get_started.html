@@ -9,6 +9,24 @@
 
   <title>Get Started</title>
    <link rel="icon" type="image/x-icon" href="https://basket-boost-website.kusumpareek.repl.co/static/9.png">
+  <style>
+      .circular-video {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .circular-video video {
+      width: 100%;
+      height: auto;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
 </head>
 <body>
   {% include 'navbar.html' %}
@@ -16,9 +34,9 @@
   <div class="container">
     <div class="row">
       <div class="col-2"> {% include 'sidebar.html' %}</div>
-      <div class="col-8 pt-4">
-        <h1 class='pb-4'>
-        Get Started Page
+      <div class="col-7 pt-4">
+        <h1 class='display-5 pb-4 '>
+        Choose a Dataset from your device and upload here
     </h1>
  
      {% include 'loader.html' %}
@@ -26,10 +44,15 @@
         <p class='alert alert-success'>{{ message }}</p>
     {% endif %}
   <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
-    <label for="file-input">Upload CSV File: </label>
-    <input  id="file-input" type="file" name="file" accept=".csv" required><br><br>
+    <div class="mb-3 mt-4">
+      <label for="file-input">Upload CSV File: </label>
+    <input  id="file-input" type="file" name="file" accept=".csv" required>
+    </div>
 
-    <input type="submit" class="btn btn-dark" value="Upload">
+<div class="mb-3">
+   <input type="submit" class="btn btn-dark" value="Upload">
+</div>
+   
     {% if error %}
         <p>Error: {{ error }}</p>
     {% endif %}
@@ -40,6 +63,13 @@
      
   </form>
     </div>
+      <div class="circular-video col-3 mt-3">
+        <video class='mt-8' width="320" height="240" autoplay loop>
+  <source src="static/file-upload.mp4" type="video/mp4">
+  
+  Your browser does not support the video tag.
+</video>
+      </div>
     </div>
     
 </div>

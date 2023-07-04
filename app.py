@@ -3,7 +3,7 @@ from database import engine
 from sqlalchemy import text
 import re
 import os
-from database import load_user_details, authenticate_user, load_user_byname_byemail, load_all_users_byorg, load_user, delete_user_byid, edit_user_byid, upload_dbfile,show_userdb, load_file
+from database import load_user_details, authenticate_user, load_user_byname_byemail, load_all_users_byorg, load_user, delete_user_byid, edit_user_byid, upload_dbfile,show_userdb, load_file,delete_file_byid
 import pandas as pd
 from mlxtend.preprocessing import TransactionEncoder
 from mlxtend.frequent_patterns import apriori, association_rules
@@ -185,8 +185,9 @@ def upload_file():
 
         # Insert the file content into the database table
         message = upload_dbfile(filename,file_content, user_id)
-
-        return render_template('get_started.html', message = message)
+        user_id = session['user_id']
+        datasets = show_userdb(user_id)
+        return render_template('all_datasets.html', message = message,datasets=datasets)
 
     except Exception as error:
         return render_template('get_started.html', error='Failed to upload file. Error: {}'.format(error))
@@ -231,11 +232,20 @@ def preprocess(file_id):
       df[column] = pd.to_datetime(df['date_column'], format='%Y-%m-%d').dt.strftime('%Y-%m-%d')
 
     else:
-      print(f"The column '{column_name}' is not of date type.")
+      print(f"The column '{column}' is not of date type.")
 
 
   return render_template('preprocess_data.html', file=file)
 
+@app.route('/deletefile/<int:file_id>')
+def delete_file(file_id):
+  # Delete the file with the given file_id from the filedetails list
+  print("IN DELETE FILES")
+  user_id = session['user_id']
+  datasets = show_userdb(user_id)
+  filedetails = delete_file_byid(file_id)
+
+  return render_template('all_datasets.html', message = filedetails,datasets = datasets)
 # function to get the column names of uploaded csv file
 def getColumns(df):
     columns = df.columns.tolist()

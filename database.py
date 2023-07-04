@@ -8,6 +8,8 @@ engine = create_engine(connection_string,
                        connect_args={"ssl": {
                          "ssl_ca": "/etc/ssl/cert.pem"
                        }})
+
+
 def load_user_details():
   with engine.connect() as conn:
     result = conn.execute(text("select * from user_details"))
@@ -21,8 +23,9 @@ def load_user_details():
     # print("USER DETAILS : ", user_details)
     return user_details
 
+
 def authenticate_user(username, password):
-  role=''
+  role = ''
   with engine.connect() as conn:
     query = text(
       "SELECT * FROM user_details WHERE username = :username AND password = :password"
@@ -33,16 +36,17 @@ def authenticate_user(username, password):
     user_details = []
     for row in result_all:
       user_details.append(row._asdict())
-    
+
     if result.rowcount > 0:
       user_id = user_details[0]['user_id']
       role = user_details[0]['role']
       org_id = user_details[0]['org_id']
-      return ("Login successful",user_id,role,org_id)
+      return ("Login successful", user_id, role, org_id)
     else:
       return "Invalid username or password"
 
-def load_user_byname_byemail(username,email):
+
+def load_user_byname_byemail(username, email):
   with engine.connect() as conn:
     query = text(
       "SELECT * FROM user_details WHERE username = :username OR email = :email"
@@ -50,36 +54,33 @@ def load_user_byname_byemail(username,email):
     result = conn.execute(query, {'username': username, 'email': email})
     return result
 
+
 def load_all_users_byorg(org_id):
   with engine.connect() as conn:
 
-    
-    query = text(
-      "SELECT * FROM user_details WHERE org_id = :org_id"
-    )
+    query = text("SELECT * FROM user_details WHERE org_id = :org_id")
     result = conn.execute(query, {'org_id': org_id})
-  
+
     users = []
-    
+
     for row in result.all():
       users.append(row._asdict())
 
   return users
 
+
 def load_user(user_id):
   with engine.connect() as conn:
 
     # user_id= 2
-    query = text(
-      "SELECT * FROM user_details WHERE user_id = :user_id"
-    )
+    query = text("SELECT * FROM user_details WHERE user_id = :user_id")
     result = conn.execute(query, {'user_id': user_id})
-  
+
     rows = result.all()
 
   if len(rows) == 0:
     return None
-  else :
+  else:
     row = rows[0]
     print(row._asdict())
     return row._asdict()
@@ -87,64 +88,79 @@ def load_user(user_id):
     # print("user", users)
 
   return users
-# load_user(2) 
+
+
+# load_user(2)
+
 
 def delete_user_byid(user_id):
   with engine.connect() as conn:
     query = text("DELETE FROM user_details WHERE user_id = :user_id")
-    result = conn.execute(query,{'user_id': user_id})
-    
+    result = conn.execute(query, {'user_id': user_id})
+
     if result:
-     return (f"{user_id} deleted successfully")
-    else :
-      return None 
-
-def edit_user_byid(user_id,username,password,email,role):
-  with engine.connect() as conn:
-    query = text("UPDATE user_details SET username = :username, email = :email,password = :password,role = :role WHERE user_id = :user_id ")
-    result = conn.execute(query,{'user_id': user_id, 'username': username, 'email': email, 'password': password, 'role': role})
-    if result:
-     return (f"{user_id} updated successfully")
-    else :
-      return None 
+      return (f"{user_id} user id deleted successfully")
+    else:
+      return None
 
 
-def upload_dbfile(filename, filedata,userid):
+def edit_user_byid(user_id, username, password, email, role):
   with engine.connect() as conn:
     query = text(
-          "INSERT INTO db_files(file_name, file_data,user_id) VALUES (:filename, :filedata, :userid)"
-        )
+      "UPDATE user_details SET username = :username, email = :email,password = :password,role = :role WHERE user_id = :user_id "
+    )
     result = conn.execute(
-          query, {
-            'filename': filename,
-            'filedata': filedata,
-            'userid': userid,
-          })
+      query, {
+        'user_id': user_id,
+        'username': username,
+        'email': email,
+        'password': password,
+        'role': role
+      })
+    if result:
+      return (f"{user_id} updated successfully")
+    else:
+      return None
+
+
+def upload_dbfile(filename, filedata, userid):
+  with engine.connect() as conn:
+    query = text(
+      "INSERT INTO db_files(file_name, file_data,user_id) VALUES (:filename, :filedata, :userid)"
+    )
+    result = conn.execute(query, {
+      'filename': filename,
+      'filedata': filedata,
+      'userid': userid,
+    })
     if result:
       print("FILE UPLOADED!!")
       return "Your file is saved!"
     else:
       return "Could not save the file. Try Again."
 
+
 def show_userdb(user_id):
-    with engine.connect() as conn:
-      query = text(
-        "SELECT file_id,file_name FROM db_files WHERE user_id = :user_id"
-      )
-      result = conn.execute(query, {'user_id': user_id})
-    
-      result_all = result.all()
+  with engine.connect() as conn:
+    query = text(
+      "SELECT file_id,file_name FROM db_files WHERE user_id = :user_id")
+    result = conn.execute(query, {'user_id': user_id})
 
-      files = []
-      for row in result_all:
-        files.append(row._asdict())
+    result_all = result.all()
 
-      print("File Names : ", files)
-    return files
-  
+    files = []
+    for row in result_all:
+      files.append(row._asdict())
+
+    print("File Names : ", files)
+  return files
+
+
 def load_file(file_id):
   with engine.connect() as conn:
-    query = text("SELECT file_name,file_data FROM db_files WHERE file_id = :file_id LIMIT 1")
+    query = text(
+      "SELECT file_name,file_data FROM db_files WHERE file_id = :file_id LIMIT 1"
+    )
     result = conn.execute(query, {'file_id': file_id})
     rows = result.all()
     if result is None:
@@ -153,8 +169,21 @@ def load_file(file_id):
     # print(row._asdict())
     return row._asdict()
 
-    
-# print(edit_user_byid('2','paku','123456','paku@gmail.com','P')) 
+
+def delete_file_byid(file_id):
+  with engine.connect() as conn:
+    query = text("DELETE FROM db_files WHERE file_id = :file_id")
+    result = conn.execute(query, {'file_id': file_id})
+    print("QUERY", query)
+
+    if result:
+      print(f"{file_id} file id deleted successfully")
+      return (f"{file_id} file id deleted successfully")
+    else:
+      return None
+
+
+# print(edit_user_byid('2','paku','123456','paku@gmail.com','P'))
 # with engine.connect() as conn:
 
 #   org_id= 1
@@ -164,7 +193,7 @@ def load_file(file_id):
 #   result = conn.execute(query, {'org_id': org_id})
 
 #   users = []
-  
+
 #   for row in result.all():
 #     users.append(row._asdict())
 
@@ -173,4 +202,3 @@ def load_file(file_id):
 #   for user in users:
 #     for ele in user:
 #       print(f"{ele}:{user[ele]}")
-    

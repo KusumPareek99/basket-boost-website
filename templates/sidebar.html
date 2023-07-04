@@ -10,29 +10,37 @@
         background-color: #f8f9fa;
         padding: 20px;
       }
-  
+  .nav-active{
+    font-weight: bold;
+    color: #00878D;
+    border-left: 6px solid #F86717;
+    padding-left: 6px;
+  }
+  .nav-active:hover{
+    color: #F86717;
+  }
       
     </style>
 <div class="sidebar">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="nav-link" href="{{url_for('index')}}">Home</a>
+            <a class="nav-link {{ 'nav-active' if request.path == url_for('index') }}" href="{{url_for('index')}}">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{url_for('getStarted')}}">Get Started</a>
+            <a class="nav-link {{ 'nav-active' if request.path == url_for('getStarted') }}" href="{{url_for('getStarted')}}">Get Started</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{url_for('alldatasets')}}">My Datasets</a>
+            <a class="nav-link {{ 'nav-active' if request.path == url_for('alldatasets') }}" href="{{url_for('alldatasets')}}">My Datasets</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{{url_for('index')}}">My Reports</a>
           </li>
           {% if session.role == 'P'  %}
             <li class="nav-item">
-            <a class="nav-link" href="{{url_for('add_users')}}">Add Users</a>
+            <a class="nav-link {{ 'nav-active' if request.path == url_for('add_users') }}" href="{{url_for('add_users')}}">Add Users</a>
           </li>
            <li class="nav-item">
-            <a class="nav-link" href="{{url_for('all_users')}}">View All Users</a>
+            <a class="nav-link {{ 'nav-active' if request.path == url_for('all_users') }}" href="{{url_for('all_users')}}">View All Users</a>
           </li>
           {% endif %}
         </ul>
