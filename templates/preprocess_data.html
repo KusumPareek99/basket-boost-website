@@ -16,17 +16,39 @@
       {% include 'sidebar.html' %}
     </div>
     <div class="col-8">
-       <h2 class='pt-4 mt-4'>
+       <h2 class='display-3 pt-4 mt-4'>
    Preprocess Data
   </h2>
        {% include 'loader.html' %}
-      {{ file['file_name'] }}
+      <span class='lead text-secondary'><strong>You are viewing {{ file['file_name'] }}</strong></span>
+    
      <!-- <p>{{message}}</p>  -->
-      <form action="" meyhod='post'>
+      <!-- <form action="" meyhod='post'>
         <input type='submit' value = 'Pre-Process' class='btn btn-dark'>
-      </form>
+      </form> -->
+     <div class="list-group">
+       <ul class="list-group list-group-flush">
+         {% for rule in myrules %}
+  <!-- <li class="list-group-item">{{ rule }}</li> -->
+         <li class="list-group-item d-flex justify-content-between align-items-start">
+    <div class="ms-2 me-auto">
+      <div class="fw-bold">Rule {{ loop.index }}</div>
+      {{ rule }}
     </div>
+    
+  </li>
+  {% endfor %}
+</ul>
+     </div>  
+      <!-- <span class='lead text-info'>Click the below button to show visuals</span> -->
+   <div class='text-end'>
+     <button type="button" class="btn btn-outline-dark mt-4">Show Chart</button>
+   </div> 
+    </div>
+     
    </div>
+    
   </div>
+   {% include 'footer.html' %}
 </body>
 </html>

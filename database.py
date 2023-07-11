@@ -87,7 +87,7 @@ def load_user(user_id):
 
     # print("user", users)
 
-  return users
+  return row
 
 
 # load_user(2)
@@ -135,7 +135,7 @@ def upload_dbfile(filename, filedata, userid):
     })
     if result:
       print("FILE UPLOADED!!")
-      return "Your file is saved!"
+      return (f"Your file {filename} is saved!")
     else:
       return "Could not save the file. Try Again."
 
@@ -143,7 +143,8 @@ def upload_dbfile(filename, filedata, userid):
 def show_userdb(user_id):
   with engine.connect() as conn:
     query = text(
-      "SELECT file_id,file_name FROM db_files WHERE user_id = :user_id")
+      "SELECT file_id,file_name FROM db_files WHERE user_id = :user_id ORDER BY file_id DESC"
+    )
     result = conn.execute(query, {'user_id': user_id})
 
     result_all = result.all()
