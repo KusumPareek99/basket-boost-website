@@ -8,6 +8,7 @@
   <title>My datasets</title>
   <link rel="icon" type="image/x-icon" href="https://basket-boost-website.kusumpareek.repl.co/static/9.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+  
 </head>
 <body>
   {% include 'navbar.html' %}
@@ -24,8 +25,9 @@
       {% if message %}
        <h3>{{message}}</h3>
       {% endif %}
+       {% if datasets %}
 <div class="table-responsive">
-   {% if datasets %}
+  
   <table class='table'>
    <thead>
             <tr>
@@ -48,7 +50,139 @@
                
                 <td>
                   <a class='btn btn-success' href="#">View</a>
-                  <a class='btn btn-warning' href="{{ url_for('preprocess', file_id=file['file_id']) }}">Pre-Process</a>
+                  <!-- <a class='btn btn-warning' data-bs-toggle="modal" data-bs-target="#preprocessModal" >Pre-Process</a> -->
+                        <!-- Button trigger modal -->
+<a class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#preprocessModal" href="#" onclick="setCurrentFile({{ file['file_id'] }}, '{{ file['file_name'] }}')">
+  Pre-process
+</a>
+
+
+
+          
+                  <!-- Modal -->
+<div class="modal fade" id="preprocessModal" tabindex="-1" aria-labelledby="preprocessModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="preprocessModalLabel">Choose Transaction ID Column for <span id="modalFileName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="transactionID" class="form-label">Choose Transaction ID:</label>
+          <div id="transactionIDOptions"></div>
+        </div>
+        <div class="mb-3">
+          <label for="itemsColumn" class="form-label">Choose Items Column:</label>
+          <div id="itemsColumnOptions"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        <form id="preprocessForm" action="{{ url_for('getRules', file_id=file['file_id']) }}" method="POST">
+          <input type="hidden" name="transactionID" id="transactionIDInput">
+          <input type="hidden" name="itemsColumn" id="itemsColumnInput">
+          <button type="submit" class="btn btn-dark">Get Rules</button>
+        </form>
+
+        <!-- <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        <button type="button"  class="btn btn-dark">Get Rules</button> -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript code -->
+<script>
+  function setCurrentFile(fileId, fileName) {
+    const modalFileName = document.getElementById('modalFileName');
+    const modalTransactionIDOptions = document.getElementById('transactionIDOptions');
+    const modalItemsColumnOptions = document.getElementById('itemsColumnOptions');
+    const transactionIDInput = document.getElementById('transactionIDInput');
+    const itemsColumnInput = document.getElementById('itemsColumnInput');
+
+    modalFileName.textContent = fileName;
+    modalTransactionIDOptions.innerHTML = '';
+    modalItemsColumnOptions.innerHTML = '';
+
+    const fetchColumnsPromise = fetch('/getColumns/' + fileId)
+      .then(response => response.json())
+      .then(data => {
+        data.columns.forEach(function(column) {
+          const transactionIDOption = createRadioOption('transactionID', column);
+          modalTransactionIDOptions.appendChild(transactionIDOption);
+
+          const itemsColumnOption = createRadioOption('itemsColumn', column);
+          modalItemsColumnOptions.appendChild(itemsColumnOption);
+        });
+
+        $('#preprocessModal').modal('show');
+        return new Promise(resolve => {
+          $('#preprocessForm').submit(function(e) {
+            e.preventDefault();
+            const transactionID = $('input[name="transactionID"]:checked').val();
+            const itemsColumn = $('input[name="itemsColumn"]:checked').val();
+            transactionIDInput.value = transactionID;
+            itemsColumnInput.value = itemsColumn;
+            resolve();
+          });
+        });
+      });
+
+    return fetchColumnsPromise;
+  }
+
+  function createRadioOption(name, value) {
+    const div = document.createElement('div');
+    div.classList.add('form-check');
+
+    const input = document.createElement('input');
+    input.classList.add('form-check-input');
+    input.type = 'radio';
+    input.name = name;
+    input.id = value;
+    input.value = value;
+
+    const label = document.createElement('label');
+    label.classList.add('form-check-label');
+    label.setAttribute('for', value);
+    label.textContent = value;
+
+    div.appendChild(input);
+    div.appendChild(label);
+
+    return div;
+  }
+</script>
+
+
+
+
+
+  <!-- <div class="modal fade" id="preprocessModal" tabindex="-1" aria-labelledby="preprocessModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="preprocessModalLabel">Choose Transaction ID Column for {{ current_file['file_name'] }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p>Choose a column for transaction id</p>
+          <ol>
+          {% for column in current_file['columns'] %}
+            <li>{{ column }}</li>
+          {% endfor %}
+        </ol>
+         
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+                 -->
                   <a class='btn btn-danger' href="{{ url_for('delete_file', file_id=file['file_id']) }}">Delete</a>
                 </td>
                
@@ -57,15 +191,24 @@
             {% endfor %}
           {% else %}
           <p class="lead">Your uploaded datasets will be displayed here</p>
-        {% endif %}
+       
           
          
         </tbody>
 </table></div>
+
+
+ 
+       {% endif %}
     </div>
    </div>
     
   </div>
    {% include 'footer.html' %}
+ <!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 </body>
 </html>

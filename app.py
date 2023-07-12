@@ -4,6 +4,7 @@ from sqlalchemy import text
 import re
 import os
 from database import authenticate_user, load_user_byname_byemail, load_all_users_byorg, load_user, delete_user_byid, edit_user_byid, upload_dbfile, show_userdb, load_file, delete_file_byid
+from flask import jsonify
 import pandas as pd
 from mlxtend.preprocessing import TransactionEncoder
 from mlxtend.frequent_patterns import apriori, association_rules
@@ -220,11 +221,37 @@ def delete_file(file_id):
 def alldatasets():
   user_id = session['user_id']
   datasets = show_userdb(user_id)
-  return render_template('all_datasets.html', datasets=datasets)
+  column = {}
+  for dataset in datasets:
+    file_id = dataset['file_id']
+    column[dataset['file_name']] = getColumns(file_id)
+    dataset['file'] = {'file_id': file_id, 'file_name': dataset['file_name']}
+    
+  # column[datasets[i]['file_name']] = getColumns(datasets[i]['file_id'])
+  print(datasets)
+  print(column)
+  return render_template('all_datasets.html',
+                         datasets=datasets,
+                         column=column,
+                         current_file=None)
 
 
-@app.route('/preprocess/<int:file_id>', methods=['GET', 'POST'])
-def preprocess(file_id):
+@app.route('/getColumns/<int:file_id>', methods=['GET', 'POST'])
+def getColumns(file_id):
+  file = load_file(file_id)
+  file_content = file['file_data']
+  temp_file_path = f"static/mydb/{file['file_name']}"
+  with open(temp_file_path, 'wb') as temp_file:
+    temp_file.write(file_content)
+  df = pd.read_csv(temp_file_path)
+  columns = df.columns.tolist()
+  return jsonify({'file_name': file['file_name'], 'columns': columns})
+
+
+@app.route('/getRules/<int:file_id>', methods=['GET', 'POST'])
+def getRules(file_id):
+  transactionID = request.form.get('transactionID')
+  itemsColumn = request.form.get('itemsColumn')
   file = load_file(file_id)
   # print('file: ', file['file_name'] )
   # Get the file content from the database
@@ -248,7 +275,7 @@ def preprocess(file_id):
 
   # Group items by transaction and create a new DataFrame with binary encoding
   # to do: change Member_number and itemDescription to dynamic column name
-  transaction_data = df.groupby('Member_number')['itemDescription'].apply(
+  transaction_data = df.groupby(transactionID)[itemsColumn].apply(
     list).reset_index(name='items')
 
   # Perform one-hot encoding to create a binary matrix of items
@@ -282,11 +309,10 @@ def preprocess(file_id):
   return render_template('preprocess_data.html', file=file, myrules=myrule)
 
 
-
 # function to get the column names of uploaded csv file
-def getColumns(df):
-  columns = df.columns.tolist()
-  return columns
+# def getColumns(df):
+#   columns = df.columns.tolist()
+#   return columns
 
 
 # function to remove spaces in the specified column of the dataframe
