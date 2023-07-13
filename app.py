@@ -5,6 +5,7 @@ import re
 import os
 from database import authenticate_user, load_user_byname_byemail, load_all_users_byorg, load_user, delete_user_byid, edit_user_byid, upload_dbfile, show_userdb, load_file, delete_file_byid
 from flask import jsonify
+import json
 import pandas as pd
 from mlxtend.preprocessing import TransactionEncoder
 from mlxtend.frequent_patterns import apriori, association_rules
@@ -226,7 +227,7 @@ def alldatasets():
     file_id = dataset['file_id']
     column[dataset['file_name']] = getColumns(file_id)
     dataset['file'] = {'file_id': file_id, 'file_name': dataset['file_name']}
-    
+
   # column[datasets[i]['file_name']] = getColumns(datasets[i]['file_id'])
   print(datasets)
   print(column)
@@ -252,6 +253,7 @@ def getColumns(file_id):
 def getRules(file_id):
   transactionID = request.form.get('transactionID')
   itemsColumn = request.form.get('itemsColumn')
+  print("IN GET RULES FUNCTION------******-------")
   file = load_file(file_id)
   # print('file: ', file['file_name'] )
   # Get the file content from the database
@@ -289,30 +291,26 @@ def getRules(file_id):
                             min_threshold=0.5)
 
   sorted_rules = rules.sort_values(by='confidence', ascending=False)
-  top_rules = sorted_rules.head(5)
+  top_rules = sorted_rules.head(10)
   myrule = []
-  for idx, rule in top_rules.iterrows():
-    antecedents = ', '.join(rule['antecedents'])
-    consequents = ', '.join(rule['consequents'])
-    confidence = rule['confidence']
-    support = rule['support']
-    myrule.append(
-      f"Antecedents: {antecedents}  Consequents: {consequents} Confidence: {confidence:.2f}  Support: {support:.2f}"
-    )
-    print(f"Rule #{idx+1}:")
-    print(f"Antecedents: {antecedents}")
-    print(f"Consequents: {consequents}")
-    print(f"Confidence: {confidence:.2f}")
-    print(f"Support: {support:.2f}")
-    print("---")
+  myrule = [{
+    'antecedents': ', '.join(rule['antecedents']),
+    'consequents': ', '.join(rule['consequents']),
+    'confidence': rule['confidence'],
+    'support': rule['support']
+  } for idx, rule in top_rules.iterrows()]
 
-  return render_template('preprocess_data.html', file=file, myrules=myrule)
+  return jsonify({'rules': myrule})
 
 
-# function to get the column names of uploaded csv file
-# def getColumns(df):
-#   columns = df.columns.tolist()
-#   return columns
+@app.route('/displayRules')
+def displayRules():
+  rules = request.args.get('rules')
+  rules = json.loads(rules)
+  print("RULES ********")
+  print(rules)
+  # Render the template and pass the rules to display on the page
+  return render_template('display_rules.html', rules=rules)
 
 
 # function to remove spaces in the specified column of the dataframe

@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible
-    " content="IE=edge">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My datasets</title>
   <link rel="icon" type="image/x-icon" href="https://basket-boost-website.kusumpareek.repl.co/static/9.png">
@@ -50,15 +49,8 @@
                
                 <td>
                   <a class='btn btn-success' href="#">View</a>
-                  <!-- <a class='btn btn-warning' data-bs-toggle="modal" data-bs-target="#preprocessModal" >Pre-Process</a> -->
-                        <!-- Button trigger modal -->
-<a class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#preprocessModal" href="#" onclick="setCurrentFile({{ file['file_id'] }}, '{{ file['file_name'] }}')">
-  Pre-process
-</a>
-
-
-
-          
+                 
+                        
                   <!-- Modal -->
 <div class="modal fade" id="preprocessModal" tabindex="-1" aria-labelledby="preprocessModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -79,14 +71,11 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-        <form id="preprocessForm" action="{{ url_for('getRules', file_id=file['file_id']) }}" method="POST">
+        <form id="preprocessForm" action="{{ url_for('getRules', file_id=file['file_id']) }}" method="post">
           <input type="hidden" name="transactionID" id="transactionIDInput">
           <input type="hidden" name="itemsColumn" id="itemsColumnInput">
-          <button type="submit" class="btn btn-dark">Get Rules</button>
+          <input type="submit" class="btn btn-dark" onclick='submitPreprocessForm()' value='Get Rules'>
         </form>
-
-        <!-- <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-        <button type="button"  class="btn btn-dark">Get Rules</button> -->
       </div>
     </div>
   </div>
@@ -94,7 +83,10 @@
 
 <!-- JavaScript code -->
 <script>
+   let currentFileId;
+  
   function setCurrentFile(fileId, fileName) {
+    currentFileId = fileId;
     const modalFileName = document.getElementById('modalFileName');
     const modalTransactionIDOptions = document.getElementById('transactionIDOptions');
     const modalItemsColumnOptions = document.getElementById('itemsColumnOptions');
@@ -153,36 +145,47 @@
 
     return div;
   }
+  function submitPreprocessForm() {
+    console.log('in submitting modal form')
+    const selectedTransactionID = $('input[name="transactionID"]:checked').val();
+    const selectedItemsColumn = $('input[name="itemsColumn"]:checked').val();
+
+    if (selectedTransactionID && selectedItemsColumn) {
+      const url = '/getRules/' + currentFileId;
+      const formData = new FormData();
+      formData.append('transactionID', selectedTransactionID);
+      formData.append('itemsColumn', selectedItemsColumn);
+
+     fetch(url, {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          const rules = data.rules;
+          console.log(rules);
+          // Handle displaying the rules as needed
+          // You can redirect to a new page and pass the rules as query parameters
+          window.location.href = '/displayRules?rules=' + encodeURIComponent(JSON.stringify(rules));
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+
+      $('#preprocessModal').modal('hide');
+    } else {
+      alert('Please select both Transaction ID and Items Column');
+    }
+  }
 </script>
+          <!-- Button trigger modal -->
+<a class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#preprocessModal" href="#" onclick="setCurrentFile({{ file['file_id'] }}, '{{ file['file_name'] }}')">
+  Pre-process
+</a>
 
 
 
 
-
-  <!-- <div class="modal fade" id="preprocessModal" tabindex="-1" aria-labelledby="preprocessModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="preprocessModalLabel">Choose Transaction ID Column for {{ current_file['file_name'] }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <p>Choose a column for transaction id</p>
-          <ol>
-          {% for column in current_file['columns'] %}
-            <li>{{ column }}</li>
-          {% endfor %}
-        </ol>
-         
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Save changes</button>
-        </div>
-      </div>
-    </div>
-  </div>
-                 -->
                   <a class='btn btn-danger' href="{{ url_for('delete_file', file_id=file['file_id']) }}">Delete</a>
                 </td>
                
