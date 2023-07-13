@@ -269,6 +269,18 @@ docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-inline
 tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
+name = "plotly"
+version = "5.15.0"
+description = "An open-source, interactive data visualization library for Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+packaging = "*"
+tenacity = ">=6.2.0"
+
+[[package]]
 name = "pyparsing"
 version = "3.1.0"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
@@ -378,6 +390,17 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3-binary"]
 
 [[package]]
+name = "tenacity"
+version = "8.2.2"
+description = "Retry code until it succeeds"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+doc = ["reno", "sphinx", "tornado (>=4.5)"]
+
+[[package]]
 name = "threadpoolctl"
 version = "3.1.0"
 description = "threadpoolctl"
@@ -418,7 +441,7 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "18c6c1d941a82e702428142f9ae7b4d8440c5955688428636534dbcedb8ff61b"
+content-hash = "7f4fbc0272c5f48a46677de693a0f5b7e0a9b13d3f31ce9c622d84c00631c1ff"
 
 [metadata.files]
 blinker = []
@@ -441,6 +464,7 @@ numpy = []
 packaging = []
 pandas = []
 pillow = []
+plotly = []
 pyparsing = []
 python-dateutil = []
 pytz = []
@@ -448,6 +472,7 @@ scikit-learn = []
 scipy = []
 six = []
 sqlalchemy = []
+tenacity = []
 threadpoolctl = []
 typing-extensions = []
 tzdata = []

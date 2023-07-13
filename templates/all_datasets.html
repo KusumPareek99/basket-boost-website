@@ -11,18 +11,18 @@
 </head>
 <body>
   {% include 'navbar.html' %}
-  <div class='container'>
-   <div class="row">
+  <div class='container mb-4 pb-4'>
+   <div class='row' style='max-height: calc(100vh - 250px); overflow-y: auto;'>
       <div class="col-2">
       {% include 'sidebar.html' %}
     </div>
     <div class="col-8">
-       <h2 class='pt-4 mt-4'>
+       <h2 class='display-3 pt-4 mt-4'>
    My Datasets
   </h2>
        {% include 'loader.html' %}
       {% if message %}
-       <h3>{{message}}</h3>
+       <h3 class="lead text-success"><b>{{message}}</b></h3>
       {% endif %}
        {% if datasets %}
 <div class="table-responsive">
@@ -83,8 +83,8 @@
 
 <!-- JavaScript code -->
 <script>
-   let currentFileId;
-  
+  let currentFileId;
+
   function setCurrentFile(fileId, fileName) {
     currentFileId = fileId;
     const modalFileName = document.getElementById('modalFileName');
@@ -100,7 +100,7 @@
     const fetchColumnsPromise = fetch('/getColumns/' + fileId)
       .then(response => response.json())
       .then(data => {
-        data.columns.forEach(function(column) {
+        data.columns.forEach(function (column) {
           const transactionIDOption = createRadioOption('transactionID', column);
           modalTransactionIDOptions.appendChild(transactionIDOption);
 
@@ -110,7 +110,7 @@
 
         $('#preprocessModal').modal('show');
         return new Promise(resolve => {
-          $('#preprocessForm').submit(function(e) {
+          $('#preprocessForm').submit(function (e) {
             e.preventDefault();
             const transactionID = $('input[name="transactionID"]:checked').val();
             const itemsColumn = $('input[name="itemsColumn"]:checked').val();
@@ -145,8 +145,9 @@
 
     return div;
   }
+
   function submitPreprocessForm() {
-    console.log('in submitting modal form')
+    console.log('in submitting modal form');
     const selectedTransactionID = $('input[name="transactionID"]:checked').val();
     const selectedItemsColumn = $('input[name="itemsColumn"]:checked').val();
 
@@ -156,20 +157,33 @@
       formData.append('transactionID', selectedTransactionID);
       formData.append('itemsColumn', selectedItemsColumn);
 
-     fetch(url, {
+      fetch(url, {
         method: 'POST',
-        body: formData
+        body: formData,
       })
-        .then(response => response.json())
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Error: ' + response.statusText);
+            alert("Please choose valid fields!!");
+          }
+        })
         .then(data => {
-          const rules = data.rules;
-          console.log(rules);
-          // Handle displaying the rules as needed
-          // You can redirect to a new page and pass the rules as query parameters
-          window.location.href = '/displayRules?rules=' + encodeURIComponent(JSON.stringify(rules));
+          if (data.rules) {
+            const rules = data.rules;
+            console.log(rules);
+            // Handle displaying the rules as needed
+            // You can redirect to a new page and pass the rules as query parameters
+            window.location.href = '/displayRules?rules=' + encodeURIComponent(JSON.stringify(rules));
+          } else {
+            throw new Error('Error: Invalid response from the server');
+            alert("Please choose valid fields!!");
+          }
         })
         .catch(error => {
           console.error('Error:', error);
+          alert("Please choose valid fields!!");
         });
 
       $('#preprocessModal').modal('hide');
@@ -178,6 +192,7 @@
     }
   }
 </script>
+
           <!-- Button trigger modal -->
 <a class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#preprocessModal" href="#" onclick="setCurrentFile({{ file['file_id'] }}, '{{ file['file_name'] }}')">
   Pre-process

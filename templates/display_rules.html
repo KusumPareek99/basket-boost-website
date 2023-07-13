@@ -17,16 +17,7 @@
       </div>
       <div class="col-8">
         <h1 class = "display-3 mt-3 pt-4 mb-3">Rules</h1>
-  <!-- <ol>
-    {% for rule in rules %}
-      <li>
-        <strong>Antecedents:</strong> {{ rule.antecedents }}<br>
-        <strong>Consequents:</strong> {{ rule.consequents }}<br>
-        <strong>Confidence:</strong> {{ rule.confidence }}<br>
-        <strong>Support:</strong> {{ rule.support }}<br>
-      </li>
-    {% endfor %}
-  </ol> -->
+        
         <table class="table table-striped">
           <thead>
             <tr>
@@ -37,6 +28,7 @@
             </tr>
              </thead>
           <tbody>
+            {% if rules %}
              {% for rule in rules %}
             <tr>
               <td>{{ rule.antecedents }}</td>
@@ -45,9 +37,28 @@
               <td>{{ rule.support }}</td>
             </tr>
              {% endfor %}
+             {% else %}
+          <p class="lead">No rules were generated. Make sure to choose correct columns.</p>
+       
+            {% endif %}
           </tbody>
         </table>
+        {% if rules %}
+        <div class="text-center mt-4 pt-4">
+          <form action="{{ url_for('dataVisualization') }}" method="post">
+  <input type="hidden" name="allrules" value="{{ rules }}">
+  <button type="submit" name="submit" class="align-right btn btn-dark">Visualize</button>
+</form>
+
+</form>
+
+          </form>
+         
+        </div>
+          
+        {% endif %}
       </div>
+      
     </div>
   </div>
      {% include 'footer.html' %}

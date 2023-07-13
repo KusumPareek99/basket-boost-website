@@ -29,7 +29,7 @@
   </h2>
  {% include 'loader.html' %}
   <form action="{{ url_for('add_users') }}" method="post" class="needs-validation" novalidate>
-				<div class="h3 col text-danger text-wrap mw-50">{{ message }}</div>
+				<div class="h3 col text-success text-wrap mw-50">{{ message }}</div>
 				<div class="col-4 mb-3">
 					<input id="username" name="username" type="text" placeholder="Enter Your Username" class="form-control" required/>
 					<div class="valid-feedback">Looks good!</div>

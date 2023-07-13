@@ -9,7 +9,7 @@ import json
 import pandas as pd
 from mlxtend.preprocessing import TransactionEncoder
 from mlxtend.frequent_patterns import apriori, association_rules
-from matplotlib import pyplot as plt
+import plotly.graph_objs as go
 #from flask_fontawesome import FontAwesome
 
 app = Flask(__name__)
@@ -38,7 +38,7 @@ def login():
       session['role'] = result[2]
       session['org_id'] = result[3]
       # role = result[1]
-      return render_template('index.html', message='Login Success', role=role)
+      return redirect(url_for('index', message='Login Success', role=role))
     else:
       message = 'Incorrect details were entered'
   return render_template('login.html', message=message)
@@ -113,12 +113,6 @@ def all_users():
   return render_template('view_all_users.html', users=users)
 
 
-# @app.route("/allusers/<id>")
-# def show_user(id):
-#   user = load_user(id)
-#   return render_template('')
-
-
 @app.route('/delete/<int:user_id>')
 def delete_user(user_id):
   # Delete the user with the given user_id from the userdetails list
@@ -191,9 +185,7 @@ def upload_file():
     message = upload_dbfile(filename, file_content, user_id)
 
     datasets = show_userdb(user_id)
-    return render_template('all_datasets.html',
-                           message=message,
-                           datasets=datasets)
+    return redirect(url_for('alldatasets', message=message, datasets=datasets))
 
   except Exception as error:
     return render_template(
@@ -213,7 +205,6 @@ def delete_file(file_id):
   datasets = show_userdb(user_id)
   filedetails = delete_file_byid(file_id)
 
-  # return render_template('all_datasets.html', message = filedetails,datasets = datasets)
   return redirect(
     url_for('alldatasets', datasets=datasets, message=filedetails))
 
@@ -228,7 +219,6 @@ def alldatasets():
     column[dataset['file_name']] = getColumns(file_id)
     dataset['file'] = {'file_id': file_id, 'file_name': dataset['file_name']}
 
-  # column[datasets[i]['file_name']] = getColumns(datasets[i]['file_id'])
   print(datasets)
   print(column)
   return render_template('all_datasets.html',
@@ -253,62 +243,64 @@ def getColumns(file_id):
 def getRules(file_id):
   transactionID = request.form.get('transactionID')
   itemsColumn = request.form.get('itemsColumn')
-  print("IN GET RULES FUNCTION------******-------")
-  file = load_file(file_id)
-  # print('file: ', file['file_name'] )
-  # Get the file content from the database
-  file_content = file['file_data']
-  # Create a temporary file path to save the content
-  temp_file_path = f"static/mydb/{file['file_name']}"
-  with open(temp_file_path, 'wb') as temp_file:
-    temp_file.write(file_content)
-  # Read the temporary file into a DataFrame
-  df = pd.read_csv(
-    temp_file_path)  # todo: Adjust this line if using Excel file
-  # Perform data cleaning
-  # Remove duplicates
-  df.drop_duplicates(inplace=True)
 
-  # Handle missing values
-  df.fillna('NA', inplace=True)
+  try:
+    file = load_file(file_id)
 
-  # Change column data types to string
-  df = df.astype(str)
+    # Get the file content from the database
+    file_content = file['file_data']
+    # Create a temporary file path to save the content
+    temp_file_path = f"static/mydb/{file['file_name']}"
+    with open(temp_file_path, 'wb') as temp_file:
+      temp_file.write(file_content)
+    # Read the temporary file into a DataFrame
+    df = pd.read_csv(
+      temp_file_path)  # todo: Adjust this line if using Excel file
+    # Perform data cleaning
+    # Remove duplicates
+    df.drop_duplicates(inplace=True)
 
-  # Group items by transaction and create a new DataFrame with binary encoding
-  # to do: change Member_number and itemDescription to dynamic column name
-  transaction_data = df.groupby(transactionID)[itemsColumn].apply(
-    list).reset_index(name='items')
+    # Handle missing values
+    df.fillna('NA', inplace=True)
 
-  # Perform one-hot encoding to create a binary matrix of items
-  one_hot_encoded = transaction_data['items'].str.join('|').str.get_dummies()
+    # Change column data types to string
+    df = df.astype(str)
 
-  frequent_itemsets = apriori(one_hot_encoded,
-                              min_support=0.1,
-                              use_colnames=True)
-  rules = association_rules(frequent_itemsets,
-                            metric='confidence',
-                            min_threshold=0.5)
+    # Group items by transaction and create a new DataFrame with binary encoding
+    # to do: change Member_number and itemDescription to dynamic column name
+    transaction_data = df.groupby(transactionID)[itemsColumn].apply(
+      list).reset_index(name='items')
 
-  sorted_rules = rules.sort_values(by='confidence', ascending=False)
-  top_rules = sorted_rules.head(10)
-  myrule = []
-  myrule = [{
-    'antecedents': ', '.join(rule['antecedents']),
-    'consequents': ', '.join(rule['consequents']),
-    'confidence': rule['confidence'],
-    'support': rule['support']
-  } for idx, rule in top_rules.iterrows()]
+    # Perform one-hot encoding to create a binary matrix of items
+    one_hot_encoded = transaction_data['items'].str.join('|').str.get_dummies()
 
-  return jsonify({'rules': myrule})
+    frequent_itemsets = apriori(one_hot_encoded,
+                                min_support=0.1,
+                                use_colnames=True)
+    rules = association_rules(frequent_itemsets,
+                              metric='confidence',
+                              min_threshold=0.5)
+
+    sorted_rules = rules.sort_values(by='confidence', ascending=False)
+    top_rules = sorted_rules.head(10)
+    myrule = []
+    myrule = [{
+      'antecedents': ', '.join(rule['antecedents']),
+      'consequents': ', '.join(rule['consequents']),
+      'confidence': round(rule['confidence'], 3),
+      'support': round(rule['support'], 3)
+    } for idx, rule in top_rules.iterrows()]
+
+    return jsonify({'rules': myrule})
+  except Exception as e:
+    return jsonify({'error': str(e)})
 
 
 @app.route('/displayRules')
 def displayRules():
   rules = request.args.get('rules')
   rules = json.loads(rules)
-  print("RULES ********")
-  print(rules)
+
   # Render the template and pass the rules to display on the page
   return render_template('display_rules.html', rules=rules)
 
@@ -390,17 +382,35 @@ def displayResults(rules):
 
 
 # function to perform data visualization
-def dataVisualization(rules):
-  fig = plt.figure(figsize=(10, 10))
-  ax = fig.add_subplot(111)
-  scatter = ax.scatter(rules['support'],
-                       rules['confidence'],
-                       c=rules['lift'],
-                       cmap='gray')
-  plt.colorbar(scatter)
-  plt.xlabel('support')
-  plt.ylabel('confidence')
-  plt.show()
+@app.route('/visualize', methods=['POST'])
+def dataVisualization():
+  rules = request.form['allrules']
+  # Replace single quotes with double quotes to ensure valid JSON format
+  rules = rules.replace("'", '"')
+  # Convert the rules data from string to a list using JSON decoding
+  rules = json.loads(rules)
+  # Extract the itemsets and support values from the rules
+  itemsets = [
+    rule['consequents'] + ', ' + rule['antecedents'] for rule in rules
+  ]
+  support = [rule['support'] for rule in rules]
+
+  # Create the bar chart trace
+  data = [go.Bar(x=support, y=itemsets, orientation='h')]
+
+  # Define the chart layout
+  layout = go.Layout(title='Insights Visualization',
+                     xaxis=dict(title='Support'),
+                     yaxis=dict(title='Frequent Itemsets'),
+                     barmode='group')
+
+  # Create the figure
+  fig = go.Figure(data=data, layout=layout)
+
+  # Convert the figure to JSON for rendering in HTML
+  chart_json = fig.to_json()
+
+  return render_template('visualize_insights.html', chart_json=chart_json)
 
 
 # function to perform data analysis and visualization
