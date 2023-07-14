@@ -1,5 +1,4 @@
-from sqlalchemy import create_engine, text, select
-import re
+from sqlalchemy import create_engine, text
 import os
 
 connection_string = os.environ['DB_CONNECTION_STRING']
@@ -19,8 +18,6 @@ def load_user_details():
     user_details = []
     for row in result_all:
       user_details.append(row._asdict())
-
-    # print("USER DETAILS : ", user_details)
     return user_details
 
 
@@ -72,7 +69,6 @@ def load_all_users_byorg(org_id):
 def load_user(user_id):
   with engine.connect() as conn:
 
-    # user_id= 2
     query = text("SELECT * FROM user_details WHERE user_id = :user_id")
     result = conn.execute(query, {'user_id': user_id})
 
@@ -84,13 +80,8 @@ def load_user(user_id):
     row = rows[0]
     print(row._asdict())
     return row._asdict()
-
-    # print("user", users)
-
   return row
 
-
-# load_user(2)
 
 
 def delete_user_byid(user_id):
@@ -167,7 +158,6 @@ def load_file(file_id):
     if result is None:
       return 'No such file'
     row = rows[0]
-    # print(row._asdict())
     return row._asdict()
 
 
@@ -184,22 +174,50 @@ def delete_file_byid(file_id):
       return None
 
 
-# print(edit_user_byid('2','paku','123456','paku@gmail.com','P'))
-# with engine.connect() as conn:
+def search_dbfiles(user_id, file_name):
+  with engine.connect() as conn:
+    query = text(
+      "SELECT file_id, file_name FROM `basket-boost-website`.db_files  where user_id=:user_id and file_name LIKE :file_name"
+    )
+     # Check if file_name is None, and assign an empty string if so
+    file_name = '%' + file_name + '%' if file_name is not None else ''
 
-#   org_id= 1
-#   query = text(
-#     "SELECT * FROM user_details WHERE org_id = :org_id"
-#   )
-#   result = conn.execute(query, {'org_id': org_id})
+    result = conn.execute(query, {
+      'user_id': user_id,
+      'file_name': '%' + file_name + '%'
+    })
+    print("QUERY", query)
 
-#   users = []
+    result_all = result.all()
 
-#   for row in result.all():
-#     users.append(row._asdict())
+    files = []
+    for row in result_all:
+      files.append(row._asdict())
 
-#   print(users[1]['username'])
+    print("File Names : ", files)
+  return files
 
-#   for user in users:
-#     for ele in user:
-#       print(f"{ele}:{user[ele]}")
+
+def search_user(username, email):
+  with engine.connect() as conn:
+    query = text(
+      "SELECT username, email, password, role FROM `basket-boost-website`.user_details  where username LIKE :username or email LIKE :email;"
+    )
+    # Check if username and email are None, and assign empty strings if so then None
+    username = '%' + username + '%' if username is not None else ''
+    email = '%' + email + '%' if email is not None else ''
+    result = conn.execute(query, {
+      'username': '%' + username + '%',
+      'email': '%' + email + '%'
+    })
+
+    print("QUERY", query)
+
+    result_all = result.all()
+
+    users = []
+    for row in result_all:
+      users.append(row._asdict())
+
+    print("User Names : ", users)
+  return users

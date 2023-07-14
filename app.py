@@ -3,11 +3,10 @@ from database import engine
 from sqlalchemy import text
 import re
 import os
-from database import authenticate_user, load_user_byname_byemail, load_all_users_byorg, load_user, delete_user_byid, edit_user_byid, upload_dbfile, show_userdb, load_file, delete_file_byid
+from database import authenticate_user, load_user_byname_byemail, load_all_users_byorg, load_user, delete_user_byid, edit_user_byid, upload_dbfile, show_userdb, load_file, delete_file_byid, search_dbfiles, search_user
 from flask import jsonify
 import json
 import pandas as pd
-from mlxtend.preprocessing import TransactionEncoder
 from mlxtend.frequent_patterns import apriori, association_rules
 import plotly.graph_objs as go
 #from flask_fontawesome import FontAwesome
@@ -200,7 +199,7 @@ def upload_file():
 @app.route('/deletefile/<int:file_id>')
 def delete_file(file_id):
   # Delete the file with the given file_id from the filedetails list
-  print("IN DELETE FILES")
+  
   user_id = session['user_id']
   datasets = show_userdb(user_id)
   filedetails = delete_file_byid(file_id)
@@ -305,82 +304,6 @@ def displayRules():
   return render_template('display_rules.html', rules=rules)
 
 
-# function to remove spaces in the specified column of the dataframe
-def removeSpaces(df, column):
-  df[column] = df[column].str.strip()
-  return df
-
-
-# function to remove duplicates in the specified column of the dataframe
-def removeDuplicates(df, column):
-  df[column] = df[column].drop_duplicates()
-  return df
-
-
-# function to remove null values in the specified column of the dataframe
-def removeNull(df, column):
-  df[column] = df[column].dropna()
-  return df
-
-
-# function to remove special characters in the specified column of the dataframe
-def removeSpecialCharacters(df, column):
-  df[column] = df[column].str.replace('[^\w\s]', '')
-  return df
-
-
-# function to convert the specified column to string type
-def convertToString(df, column):
-  df[column] = df[column].astype(str)
-  return df
-
-
-# function to perform data cleaning
-def dataCleaning(df, column):
-  df = convertToString(df, column)
-  df = removeSpaces(df, column)
-  # df = removeDuplicates(df, column)
-  # df = removeNull(df, column)
-  # df = removeSpecialCharacters(df, column)
-  return df
-
-
-# function to perform one hot encoding
-def oneHotEncoding(df):
-  te = TransactionEncoder()
-  te_ary = te.fit(df).transform(df)
-  df = pd.DataFrame(te_ary, columns=te.columns_)
-  return df
-
-
-# function to perform apriori algorithm
-def aprioriAlgorithm(df):
-  frequent_itemsets = apriori(df, min_support=0.01, use_colnames=True)
-  return frequent_itemsets
-
-
-# function to perform association rules
-def associationRules(frequent_itemsets):
-  rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1)
-  return rules
-
-
-# function to perform data analysis
-def dataAnalysis(df):
-  #df = dataCleaning(df) ---- do data cleaning separately
-  df = oneHotEncoding(df)
-  frequent_itemsets = aprioriAlgorithm(df)
-  rules = associationRules(frequent_itemsets)
-  return rules
-
-
-# function to display the results
-def displayResults(rules):
-  rules = rules.sort_values(['confidence', 'lift'], ascending=[False, False])
-  print(rules.head(10))
-  return rules.head(10)
-
-
 # function to perform data visualization
 @app.route('/visualize', methods=['POST'])
 def dataVisualization():
@@ -413,17 +336,26 @@ def dataVisualization():
   return render_template('visualize_insights.html', chart_json=chart_json)
 
 
-# function to perform data analysis and visualization
-def dataAnalysisAndVisualization(df):
-  rules = dataAnalysis(df)
-  displayResults(rules)
-  dataVisualization(rules)
+#search users or datasets
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+  user_id = session['user_id']
+  searchedtext = username = email = file_name = request.form.get('searchtext')
+  # if searchedtext.strip()== '':
+  #   return render_template('search.html',message="No results for ''" )
+  if session['role'] == 'P':
+    users = search_user(username, email)
+    files = search_dbfiles(user_id, file_name)
+    return render_template('search.html', users=users, files=files, searchedtext = searchedtext)
+  else:
+    files = search_dbfiles(user_id, file_name)
+    return render_template('search.html', files=files,searchedtext = searchedtext)
 
 
 @app.route("/logout")
 def logout():
   session.pop("loggedin", None)
-  session.pop("id", None)
+  session.pop("user_id", None)
   session.pop("username", None)
   session.pop("role", None)
   session.pop("org_id", None)
