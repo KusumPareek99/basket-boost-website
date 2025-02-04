@@ -22,11 +22,11 @@ plotly
 psycopg2-binary
 pyparsing
 python-dateutil
-pytz3
+pytz
 scikit-learn
 scipy
-six0
-SQLAlchemy5
+six
+SQLAlchemy
 sqlalchemy-cockroachdb
 tenacity
 threadpoolctl
