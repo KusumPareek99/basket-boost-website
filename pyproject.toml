@@ -13,6 +13,7 @@ matplotlib = "^3.7.1"
 mlxtend = "^0.22.0"
 pandas = "^2.0.2"
 plotly = "^5.15.0"
+mysql-connector-python = "^8.4.0"
 
 [tool.poetry.dev-dependencies]
 

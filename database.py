@@ -1,12 +1,18 @@
 from sqlalchemy import create_engine, text
+import mysql.connector
 import os
 
+# Replace this with your local MySQL database connection string
 connection_string = os.environ['DB_CONNECTION_STRING']
 
-engine = create_engine(connection_string,
-                       connect_args={"ssl": {
-                         "ssl_ca": "/etc/ssl/cert.pem"
-                       }})
+# Create the SQLAlchemy engine
+engine = create_engine(connection_string)
+try:
+  with engine.connect() as conn:
+    result = conn.execute("SELECT 1")
+    print("Connection successful:", result.fetchone())
+except Exception as e:
+  print("Connection failed:", str(e))
 
 
 def load_user_details():
@@ -54,7 +60,6 @@ def load_user_byname_byemail(username, email):
 
 def load_all_users_byorg(org_id):
   with engine.connect() as conn:
-
     query = text("SELECT * FROM user_details WHERE org_id = :org_id")
     result = conn.execute(query, {'org_id': org_id})
 
@@ -68,7 +73,6 @@ def load_all_users_byorg(org_id):
 
 def load_user(user_id):
   with engine.connect() as conn:
-
     query = text("SELECT * FROM user_details WHERE user_id = :user_id")
     result = conn.execute(query, {'user_id': user_id})
 
@@ -81,7 +85,6 @@ def load_user(user_id):
     print(row._asdict())
     return row._asdict()
   return row
-
 
 
 def delete_user_byid(user_id):
@@ -98,7 +101,7 @@ def delete_user_byid(user_id):
 def edit_user_byid(user_id, username, password, email, role):
   with engine.connect() as conn:
     query = text(
-      "UPDATE user_details SET username = :username, email = :email,password = :password,role = :role WHERE user_id = :user_id "
+      "UPDATE user_details SET username = :username, email = :email, password = :password, role = :role WHERE user_id = :user_id "
     )
     result = conn.execute(
       query, {
@@ -115,26 +118,31 @@ def edit_user_byid(user_id, username, password, email, role):
 
 
 def upload_dbfile(filename, filedata, userid):
-  with engine.connect() as conn:
-    query = text(
-      "INSERT INTO db_files(file_name, file_data,user_id) VALUES (:filename, :filedata, :userid)"
-    )
-    result = conn.execute(query, {
-      'filename': filename,
-      'filedata': filedata,
-      'userid': userid,
-    })
-    if result:
-      print("FILE UPLOADED!!")
-      return (f"Your file {filename} is saved!")
-    else:
-      return "Could not save the file. Try Again."
-
+  try:
+      with engine.connect() as conn:
+          query = text(
+              "INSERT INTO db_files(file_name, file_data, user_id) VALUES (:filename, :filedata, :userid)"
+          )
+          result = conn.execute(query, {
+              'filename': filename,
+              'filedata': filedata,
+              'userid': userid,
+          })
+          conn.commit()
+          if result:
+              print(f"File uploaded: {filename}")
+              return (f"Your file {filename} is saved!")
+          else:
+              print("Failed to upload file.")
+              return "Could not save the file. Try Again."
+  except Exception as e:
+      print(f"Error uploading file: {str(e)}")
+      return "Error occurred during file upload"
 
 def show_userdb(user_id):
   with engine.connect() as conn:
     query = text(
-      "SELECT file_id,file_name FROM db_files WHERE user_id = :user_id ORDER BY file_id DESC"
+      "SELECT file_id, file_name FROM db_files WHERE user_id = :user_id ORDER BY file_id DESC"
     )
     result = conn.execute(query, {'user_id': user_id})
 
@@ -151,7 +159,7 @@ def show_userdb(user_id):
 def load_file(file_id):
   with engine.connect() as conn:
     query = text(
-      "SELECT file_name,file_data FROM db_files WHERE file_id = :file_id LIMIT 1"
+      "SELECT file_name, file_data FROM db_files WHERE file_id = :file_id LIMIT 1"
     )
     result = conn.execute(query, {'file_id': file_id})
     rows = result.all()
@@ -177,9 +185,9 @@ def delete_file_byid(file_id):
 def search_dbfiles(user_id, file_name):
   with engine.connect() as conn:
     query = text(
-      "SELECT file_id, file_name FROM `basket-boost-website`.db_files  where user_id=:user_id and file_name LIKE :file_name"
+      "SELECT file_id, file_name FROM db_files WHERE user_id=:user_id AND file_name LIKE :file_name"
     )
-     # Check if file_name is None, and assign an empty string if so
+    # Check if file_name is None, and assign an empty string if so
     file_name = '%' + file_name + '%' if file_name is not None else ''
 
     result = conn.execute(query, {
@@ -201,7 +209,7 @@ def search_dbfiles(user_id, file_name):
 def search_user(username, email):
   with engine.connect() as conn:
     query = text(
-      "SELECT username, email, password, role FROM `basket-boost-website`.user_details  where username LIKE :username or email LIKE :email;"
+      "SELECT username, email, password, role FROM user_details WHERE username LIKE :username OR email LIKE :email;"
     )
     # Check if username and email are None, and assign empty strings if so then None
     username = '%' + username + '%' if username is not None else ''
