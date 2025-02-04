@@ -23,8 +23,6 @@ psycopg2-binary
 pyparsing
 python-dateutil
 pytz
-scikit-learn
-scipy
 six
 SQLAlchemy
 sqlalchemy-cockroachdb
@@ -33,3 +31,4 @@ threadpoolctl
 typing_extensions
 tzdata
 Werkzeug
+gunicorn
